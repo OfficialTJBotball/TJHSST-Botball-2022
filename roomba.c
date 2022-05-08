@@ -1,47 +1,53 @@
-#include <kipr/botball.h>
+#include <kipr/wombat.h>
 
-int main() // grabs the pompoms and return them to home
+int main()
 {
-  create_connect();
-  int leftColorSensorPin = 1;
-  int rightColorSensorPin = 2;
-
-  int servo0Pin = 0;
-  create_drive_straight(20); // drive forward
-  msleep(1000);              // delay
-  create_spin_CW(100);       // spin right
-
-  if (get_analog_pullup(leftColorSensorPin) > 3000 && get_analog_pullup(rightColorSensorPin) > 3000)
-  {                                                                                                       // if currently on black line
-    while (get_analog_pullup(leftColorSensorPin) > 3000 && get_analog_pullup(rightColorSensorPin) > 3000) // follow line until the pom poms are collected (line tracking)
-    {
-      create_drive_straight(20); // drive forward
-      msleep(100);               // delay
-      if (get_analog_pullup(leftColorSensorPin) > 3000 && get_analog_pullup(rightColorSensorPin) < 3000)
-      {
-        create_spin_CCW(100); // rotate left
-        msleep(100);          // delay
-      }
-      if (get_analog_pullup(leftColorSensorPin) < 3000 && get_analog_pullup(rightColorSensorPin) > 3000)
-      {
-        create_spin_CW(100); // rotate right
-        msleep(100);         // delay
-      }
+    // analog 0 is right color sensor
+    // analog 1 is the left color sensor
+    create_connect(); // establishes the connection
+    int threshold = 1500;
+    enable_servos();
+    set_servo_position(0, 1800);
+        
+   	while(digital(0) == 0) { // while either of the sensors read black
+    	create_drive_straight(-250); // go forward (stays for 250 ms)  
+        if(analog(0) < threshold && analog(1) > threshold)
+        {// if the right sees white
+            msleep(100);
+            create_spin_CW(50);// turn a little bit to the left *if its veering off path prob decrease the 100*
+        	printf("turning left\n");
+        }
+        if(analog(0) > threshold && analog(1) < threshold)
+        {
+           	msleep(100);
+            create_spin_CCW(50);// turn a little bit to the right *if its veering off path prob decrease the 100*
+        	printf("turning right\n");
+        }
+    }   
+    
+    create_spin_CCW(300);
+    set_servo_position(0, 750);
+    
+    while(1) { // while either of the sensors read black
+    	create_drive_straight(250); // go forward (stays for 250 ms)  
+        if(analog(0) < threshold && analog(1) > threshold)
+        {// if the right sees white
+            msleep(100);
+            create_spin_CCW(200);// turn a little bit to the left *if its veering off path prob decrease the 100*
+        	printf("turning left\n");
+        }
+        if(analog(0) > threshold && analog(1) < threshold)
+        {
+           	msleep(100);
+            create_spin_CW(200);// turn a little bit to the right *if its veering off path prob decrease the 100*
+        	printf("turning right\n");
+        }
     }
-  }
-  enable_servos();
-  set_servo_position(servo0Pin, 1525); // move servo up
-  create_drive_straight(30);           // drive forward
-  msleep(500);                         // delay
-  set_servo_position(servo0Pin, 2000); // move servo down to drag rectangle
-  disable_servos();
+    
+    set_servo_position(0, 1620);
+    
+    disable_servos();
 
-  create_drive_straight(-50); // drive backward
-  msleep(5000);               // delay
-  create_spin_CCW(100);       // spin left
-  msleep(1000);               // delay
-  create_drive_straight(-50); // drive backward back to home base
-  msleep(2000);               // delay
-
-  return 0;
+    return 0; // exits the program !!
+    
 }
